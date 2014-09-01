@@ -29,6 +29,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 
@@ -43,6 +44,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
 	
 	private List<CourseItem> itemList;
 	private ItemAdapter adapter;
+	private ProgressBar progressBar;
 	private RequestQueue reqQueue;
 	private static final String syllabusUrl = "https://dl.dropboxusercontent.com/u/1088314/tech_institute/2014/syllabus.json";
 
@@ -58,6 +60,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
         ListView listView =
             (ListView)findViewById(R.id.listview);
         listView.setAdapter(adapter);
+        progressBar = (ProgressBar)findViewById(R.id.progressBar1);
 
         reqQueue = Volley.newRequestQueue(this);
 		getCourseData();
@@ -66,6 +69,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
     }
 
     private void getCourseData() {
+    	progressBar.setVisibility(View.VISIBLE);
     	Response.Listener<JSONObject> listener = new Response.Listener<JSONObject>() {
 
 			@Override
@@ -73,6 +77,7 @@ public class MainActivity extends Activity implements OnItemClickListener {
 				try {
 					JSONArray array = response.getJSONArray("course");
 					setCourseArray(array);
+			    	progressBar.setVisibility(View.INVISIBLE);
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
@@ -123,15 +128,27 @@ public class MainActivity extends Activity implements OnItemClickListener {
 			inflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		}
 		
+		private class ViewHolder {
+			TextView date;
+			TextView title;
+		}
+		
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
-			View view = inflater.inflate(R.layout.lecture_row, null, false);
-			TextView dateView = (TextView) view.findViewById(R.id.date); 
-			TextView titleView = (TextView) view.findViewById(R.id.title);
+			ViewHolder holder;
+			if(convertView == null) {
+				convertView = inflater.inflate(R.layout.lecture_row, null, false);
+				holder = new ViewHolder();
+				holder.date = (TextView) convertView.findViewById(R.id.date); 
+				holder.title = (TextView) convertView.findViewById(R.id.title);
+				convertView.setTag(holder);
+			} else {
+				holder = (ViewHolder)convertView.getTag();
+			}
 			CourseItem item = getItem(position);
-			dateView.setText(dateFormat.format(item.date));
-			titleView.setText(item.title);
-			return view;
+			holder.date.setText(dateFormat.format(item.date));
+			holder.title.setText(item.title);
+			return convertView;
 		}
 
 	}
